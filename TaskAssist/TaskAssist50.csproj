@@ -1,0 +1,72 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Platforms>x86;x64</Platforms>
+    <RootNamespace>TaskAssist</RootNamespace>
+    <AssemblyName>TaskAssist</AssemblyName>
+    <Configurations>Debug;Release;Extrem</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <DefineConstants>DEBUG;TRACE;WITH_WF</DefineConstants>
+    <OutputPath>..\bin\5.0\x86\Debug</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Extrem|x86'">
+    <DefineConstants>TRACE;DEBUG;WITH_WF,EXTREM</DefineConstants>
+    <OutputPath>..\bin\5.0\x86\Extrem</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DefineConstants>DEBUG;TRACE;WITH_WF</DefineConstants>
+    <OutputPath>..\bin\5.0\x64\Debug</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Extrem|x64'">
+    <DefineConstants>TRACE;DEBUG;WITH_WF,EXTREM</DefineConstants>
+    <OutputPath>..\bin\5.0\x64\Extrem</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DefineConstants>TRACE;WITH_WF</DefineConstants>
+    <OutputPath>..\bin\5.0\x64\Release</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <DefineConstants>TRACE;WITH_WF</DefineConstants>
+    <OutputPath>..\bin\5.0\x86\Release</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="linkage\" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Consola">
+      <HintPath>linkage\Consola.dll</HintPath>
+    </Reference>
+    <Reference Include="ControlledValues">
+      <HintPath>linkage\ControlledValues.dll</HintPath>
+    </Reference>
+    <Reference Include="Int24Types">
+      <HintPath>linkage\Int24Types.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="&quot;$(ProjectDir)prepareLinkage50.bat&quot; &quot;$(PlatformTarget)&quot; &quot;$(ConfigurationName)&quot;" />
+  </Target>
+
+</Project>
