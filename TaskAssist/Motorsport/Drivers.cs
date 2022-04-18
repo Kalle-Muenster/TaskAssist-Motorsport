@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+
 namespace Stepflow.TaskAssist
 {
     public interface IActionDriver
@@ -20,9 +21,9 @@ namespace Stepflow.TaskAssist
         Task Tribune();
     }
 
-    public interface IActionDriver<A,L> : IActionDriver where A : class where L : IFinishedLap
+    public interface IActionDriver<A,L,T> : IActionDriver where A : class where L : IFinishedLap where T : class
     {
-        ITaskAssistor<A,L> assist();
+        ITaskAssistor<A,T> assist();
         L Tackt { get; set; }
 
         void Start( A action );
@@ -46,14 +47,14 @@ namespace Stepflow.TaskAssist
         public virtual bool IsBreak() { return false; }
     }
 
-    public class ActionDriver<A,L> : DriveAbstractor, IActionDriver<A,L> where A : class where L : IFinishedLap, new()
+    public class ActionDriver<A,L,T> : DriveAbstractor, IActionDriver<A,L,T> where A : class where L : class, ILapFinish<T>, new() where T : class
     {
         protected L tackt;
 
-        protected ITaskAssistor<A,L> assistor;
+        protected ITaskAssistor<A,T> assistor;
 
-        public ITaskAssistor<A,L> assist() { return assistor; }
-        public override void Init(object assistorinstance) { assistor = assistorinstance as ITaskAssistor<A,L>; }
+        public ITaskAssistor<A,T> assist() { return assistor; }
+        public override void Init(object assistorinstance) { assistor = assistorinstance as ITaskAssistor<A,T>; }
         public virtual L Tackt { get; set; }
 
         public ActionDriver() : base()
@@ -63,7 +64,7 @@ namespace Stepflow.TaskAssist
 
         public ActionDriver(int polllrate) : base()
         {
-            ((IActionDriver<A,L>)this).Speed = (float)((1.0f / polllrate) * TimeSpan.TicksPerSecond);
+            ((IActionDriver<A,L,T>)this).Speed = (float)((1.0f / polllrate) * TimeSpan.TicksPerSecond);
         }
 
         public virtual void Start<CallType>(CallType call) { Start(call as A); }
@@ -78,7 +79,7 @@ namespace Stepflow.TaskAssist
     /// <summary>
     /// A Driver implementation used to consectuitievely trigger actions of type 'Action' per a configureable interval 
     /// </summary>
-    public class SteadyAction : BaseIntervalDrive<Action,LapFinish<Action>>
+    public class SteadyAction : BaseIntervalDrive<Action,LapFinish<Action>,Action>
     {
         private static bool threadding = true;
         public static void SetDefaultThradingMode( bool independant ) { threadding = independant; }
@@ -89,7 +90,7 @@ namespace Stepflow.TaskAssist
         public SteadyAction( float fps, bool independant ) : base( fps, independant ) { }
     }
 
-    public class SteadyEvent : BaseIntervalDrive<EventHandler,LapFinish<EventHandler>>
+    public class SteadyEvent : BaseIntervalDrive<EventHandler,LapFinish<EventHandler>,EventHandler>
     {
         private static bool threadding = true;
         public static void SetDefaultThradingMode(bool independant) { threadding = independant; }

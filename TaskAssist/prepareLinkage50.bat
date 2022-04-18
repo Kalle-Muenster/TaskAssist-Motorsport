@@ -9,8 +9,8 @@ if "%_conf_%"=="Extrem" (
    set _type_=
 )
 
-set CONSOLASTREAMS=c:\WORKSPACE\PROJECTS\GITSPACE\Consola\bin\core5\v142\%_arch_%\%_conf_%
-set CONTROLLERSLIB=c:\WORKSPACE\PROJECTS\GITSPACE\ControlledValues\bin\Core5Dll\v142\%_arch_%\%_conf_%
+set CONSOLASTREAMS=c:\WORKSPACE\PROJECTS\Consola\bin\core5\v142\%_arch_%\Test\%_conf_%\net5.0
+set CONTROLLERSLIB=c:\WORKSPACE\PROJECTS\ControlledValues\bin\Core5Dll\v142\%_arch_%\%_conf_%
 
 del /f /s /q "%_link_%\*.*"
 echo ######## Cleaned linkage directory

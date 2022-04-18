@@ -12,7 +12,7 @@ using Stepflow;
 #if EXTREM_DEBUG
 using Consola;
 #endif
-using TaskAwaiter = System.Runtime.CompilerServices.TaskAwaiter;
+//using TaskAwaiter = System.Runtime.CompilerServices.TaskAwaiter;
 
 
 namespace Stepflow.TaskAssist
@@ -33,8 +33,11 @@ namespace Stepflow.TaskAssist
     public delegate void LapFinished(object sender, LapEventArgs e);
     public delegate void RaceOver();
      
-    public abstract class TimedLoop<A,L>
-        : ActionDriver<A,L> where A : class where L : LapAbstractor, new()
+    public abstract class TimedLoop<A,L,T>
+        : ActionDriver<A,L,T>
+        where A : class
+        where L : LapAbstractor, ILapFinish<T>, new()
+        where T : class
     {
         protected Task               drive;
         protected HashSet<A>         users;
@@ -46,10 +49,12 @@ namespace Stepflow.TaskAssist
         public override void OnEnded( RaceOver handler ) { ended = handler; }
         public override bool IsBreak() { return ended != null; }
         protected void               nextLap( int drivers ) { if (drivers == 0) { ended?.Invoke(); } if( round != null ) round( this, drivers ); }
+
         public event LapFinished     Round {
             add { round += value; }
             remove { round -= value; }
         }
+
         override public float        Speed {
             get { return (float)TimeSpan.TicksPerSecond / ticks; }
             set { ticks = (long)((1.0f/value)*TimeSpan.TicksPerSecond); }
@@ -137,8 +142,11 @@ namespace Stepflow.TaskAssist
         }
     }
 
-    public abstract class BaseIntervalDrive<A,C> 
-        : TimedLoop<A,C> where A : class where C : LapAbstractor, new()
+    public abstract class BaseIntervalDrive<A,L,T> 
+        : TimedLoop<A,L,T>
+        where A : class
+        where L : LapAbstractor, ILapFinish<T>, new()
+        where T : class
     {      
         protected Queue<A>      kuehe;
 
@@ -211,7 +219,7 @@ namespace Stepflow.TaskAssist
             return;
         }
 
-        public override C Tackt {
+        public override L Tackt {
             get { return tackt; }
             set { if ( !value.UseExternals ) {
                     tackt.SetHashSet( (users = value.ToHashSet<A>()) );
@@ -245,7 +253,7 @@ namespace Stepflow.TaskAssist
     
 
     
-    public class BarrieredDrive : BaseIntervalDrive<Func<ulong,ulong>,LapFinish<Func<ulong,ulong>>>
+    public class BarrieredDrive : BaseIntervalDrive<Func<ulong,ulong>,LapFinish<Func<ulong,ulong>>,Func<ulong,ulong>>
     {
         private ulong     m_barrier;
         private Hashtable m_mapping;
@@ -325,7 +333,8 @@ namespace Stepflow.TaskAssist
     	}
     }
 
-    public class ControllerDrive : TimedLoop<ControllerBase,ControllerCircuteLap>
+    public class ControllerDrive 
+        : TimedLoop<ControllerBase,ControllerCircuteLap,ControllerBase>
     {
         protected Queue<ControllerBase> waits;
 

@@ -6,6 +6,17 @@
     <RootNamespace>TaskAssist</RootNamespace>
     <AssemblyName>TaskAssist</AssemblyName>
     <Configurations>Debug;Release;Extrem</Configurations>
+    <Company>Motorsport</Company>
+    <Authors>Autos,Boote,Jets,Bobs</Authors>
+    <PackageIcon>PASS.png</PackageIcon>
+    <PackageIconUrl />
+    <AssemblyVersion>0.0.0.1</AssemblyVersion>
+    <FileVersion>0.0.0.1</FileVersion>
+    <Version>0.0.1</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>Motorsport.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -59,10 +70,19 @@
     </Reference>
     <Reference Include="ControlledValues">
       <HintPath>linkage\ControlledValues.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Int24Types">
       <HintPath>linkage\Int24Types.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\TOOLS\TolleIcons\thin\64\PASS.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
