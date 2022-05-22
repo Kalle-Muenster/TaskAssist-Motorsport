@@ -32,16 +32,17 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\4.8\x86\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WITH_WF,EXTREM</DefineConstants>
+    <OutputPath>..\bin\dot48\x86\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WITH_WF</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <MotorConfiguration>Debug</MotorConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>..\bin\4.8\x86\Release\</OutputPath>
+    <OutputPath>..\bin\dot48\x86\Release\</OutputPath>
     <DefineConstants>TRACE;WITH_WF</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -49,19 +50,21 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <MotorConfiguration>Release</MotorConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\4.8\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WITH_WF,EXTREM</DefineConstants>
+    <OutputPath>..\bin\dot48\x64\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WITH_WF</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <MotorConfiguration>Debug</MotorConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\bin\4.8\x64\Release\</OutputPath>
+    <OutputPath>..\bin\dot48\x64\Release\</OutputPath>
     <DefineConstants>TRACE;WITH_WF</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -69,21 +72,54 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <MotorConfiguration>Release</MotorConfiguration>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Extrem|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Extrem\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Extrem|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\dot48\x86\Extrem\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WITH_WF,EXTREM</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <MotorConfiguration>Debug</MotorConfiguration>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Extrem|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin\dot48\x64\Extrem\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WITH_WF,EXTREM</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <MotorConfiguration>Debug</MotorConfiguration>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>Motorports.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Consola">
-      <HintPath>linkage\Consola.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>$(ConsolaBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\Consola.dll</HintPath>
     </Reference>
-    <Reference Include="ControlledValues, Version=0.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>linkage\ControlledValues.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
+    <Reference Include="ControlledValues">
+      <HintPath>$(ControlledValuesBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\ControlledValues.dll</HintPath>
     </Reference>
-    <Reference Include="Int24Types, Version=0.0.0.2, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>linkage\Int24Types.dll</HintPath>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
+    <Reference Include="Int24Types">
+      <HintPath>$(Int24TypesBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\Int24Types.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -103,14 +139,12 @@
     <Compile Include="Vehicles.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="prepareLinkage.bat" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="linkage\" />
+    <None Include="Motorports.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>"$(ProjectDir)prepareLinkage.bat" "$(PlatformName)" "$(ConfigurationName)"</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
