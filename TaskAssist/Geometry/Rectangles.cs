@@ -27,6 +27,14 @@ namespace Stepflow.Gui
     // which makes able assigning and comparing instances which implement it against each other 
     // in a way which doesn't needs to care about implementation details, storage model layout
 
+    /// <summary>
+    /// IRectangleCompounds (partial interface which all IRectangle implementations implicily do implement)
+    /// Every IRectangle has a 'Corner' property - always should return position of top left corner - regardles of the concrete model which a rectangle implements, 'Corner' always returns position of its top-left corner and when assigned a value to it must re-position itself so that it's top-left corner will be located at that new given coordinates then 
+    /// Every IRectangle has a 'Center' property - always should return position of the rectangles center point - and any implementation should ensure when new value is assigned to 'Center' it re-positions itself so it's center position then will be locateded at that new given coordinates then
+    /// Every IRectangle has a 'Sizes' propery - these always shall return the rectangles absolute width and height values - and it should ensure that when new values is assigned to 'Sizes' it's sizes will change regarding to that assigned values accordingly 
+    /// ...Scale - (like radius or half size values) - also assignable 
+    /// ...abstract data accessibility via Compound pointers 'A' and Compound Pointers 'B' - where 'CompoundA' points the values stoted in the lower 32bit of the structure (bits 1 to 32) values and CompoundB points the values stored in the higher bits above 32's bit (bits 32 to 64)  
+    /// </summary>
     public interface IRectangleCompounds
     {
         Point32 Corner { get; set; }
@@ -35,10 +43,13 @@ namespace Stepflow.Gui
         Point32 Sizes { get; set; }
         Point32 Scale { get; set; }
 
-        PointPT  CompoundA { get; }
-        PointPT  CompoundB { get; }
+        PointPT CompoundA { get; }
+        PointPT CompoundB { get; }
     }
     
+    /// <summary>
+    /// IRectangleValues (partial interface which all IRectangle implemantation also will gain implicitly)
+    /// </summary>
     public interface IRectangleValues
     {
         int X{ get; set; }
@@ -59,7 +70,8 @@ namespace Stepflow.Gui
         IntPtr pB2{ get; set; }
     }
 
-    // IRectangle (interface) - use this for handling objects which implement the interface
+    
+    /// <summary> IRectangle (main interface for implementing rectangles) </summary>
     public interface IRectangle : IRectangleValues, IRectangleCompounds
     {
         IRectangle converted<RectangleData>() where RectangleData : struct, IRectangle;
@@ -71,6 +83,8 @@ namespace Stepflow.Gui
         StorageLayout StorageLayout { get; }
     }
     
+    /// <summary> IRectanglePtrs<> (interface for implementing rectangles which interpret distant variables for rectangle) </summary>
+    /// <typeparam name="RectangleData"></typeparam>
     public interface IRectanglePtrs<RectangleData>
         : IRectangle
         , IRectanglePointers
@@ -84,6 +98,8 @@ namespace Stepflow.Gui
         RectangleData                 resolve();
     }
 
+    /// <summary> IRectangle<> interface for distinct layout specialization via generic parameter </summary>
+    /// <typeparam name="RectangleData"></typeparam>
     public interface IRectangle<RectangleData> : IRectangle where RectangleData : struct, IRectangle
     {
         IRectangle<RectangleData>         casted();
@@ -95,9 +111,9 @@ namespace Stepflow.Gui
     #endregion
 
     #region ValueType based Rectangles
-    // ValueType based Rectangles which using different kinds of data storage models and layout kinds
+    // ValueType based Rectangles which using different kinds of data storage and layout models
 
-    // RectangleData - base structure for 64bit sized IRectangle ValueType implementations
+    // RectangleData - abstract base structure for 64bit sized IRectangle ValueType implementations
     [StructLayout(LayoutKind.Explicit,Size = 8)]
     public unsafe struct RectangleData
     {
@@ -107,6 +123,9 @@ namespace Stepflow.Gui
         [FieldOffset(4)] public Point32 compound2;
     }
 
+    /// <summary>
+    /// CenterAndScale - IRectangle implementation - storage: identity 'Center' + 'Scale' values (multipliers for identity width and height - effectively that what would be radius for a circle) for x/y axis  
+    /// </summary>
     [StructLayout(LayoutKind.Explicit,Size = 8)]
     public unsafe struct CenterAndScale
         : IRectangle<CenterAndScale> {
@@ -222,7 +241,10 @@ namespace Stepflow.Gui
         }
 
     }
-    
+
+    /// <summary>
+    /// CornerAndSize - position is top-left corner. sizes are absoulute size values width and height
+    /// </summary>
     [StructLayout(LayoutKind.Explicit,Size = 8)]
     public unsafe struct CornerAndSize
         : IRectangle<CornerAndSize> {
@@ -329,6 +351,9 @@ namespace Stepflow.Gui
 
     }
 
+    /// <summary>
+    /// AbsoluteEdges - defines position only (for left top right and botom edges - size implies to distance between these) 
+    /// </summary>
     [StructLayout(LayoutKind.Explicit,Size = 8)]
     public unsafe struct AbsoluteEdges
         : IRectangle<AbsoluteEdges> {
