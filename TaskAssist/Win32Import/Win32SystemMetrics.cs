@@ -12,7 +12,7 @@ using Point = System.Drawing.Point;
 #elif USE_WITH_WPF
 using Point = System.Windows.Point;
 #else
-using Point = TaskAssist.Geomety.Point32;
+using Point = Stepflow.Gui.Geometry.Point32;
 #endif
 
 namespace Win32Imports

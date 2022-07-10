@@ -9,7 +9,7 @@ using Rect = System.Drawing.Rectangle;
 #endif
 
 
-namespace TaskAssist.Geomety
+namespace Stepflow.Gui.Geometry
 {
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     public struct Point32

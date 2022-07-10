@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using TaskAssist.Geomety;
 using System.Runtime.InteropServices;
 #if USE_WITH_WPF
 using Point = System.Windows.Point;
@@ -10,7 +9,7 @@ using Rect = System.Drawing.Rectangle;
 #endif
 
 
-namespace Stepflow.Gui
+namespace Stepflow.Gui.Geometry
 {
 
     public enum StorageLayout
