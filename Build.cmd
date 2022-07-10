@@ -17,13 +17,13 @@ set MotorsportsVersionString=0.0.0.1
 
 :: Set Dependencies
 if "%ConsolaBinRoot%"=="" (
-set ConsolaBinRoot=C:\WORKSPACE\PROJECTS\GITSPACE\Consola\bin\%DotNetVersionString%
+set ConsolaBinRoot=.\..\..\Consola\bin\%DotNetVersionString%
 )
 if "%Int24TypesBinRoot%"=="" (
-set Int24TypesBinRoot=C:\WORKSPACE\PROJECTS\GITSPACE\Int24Types\bin\%DotNetVersionString%
+set Int24TypesBinRoot=.\..\..\Int24Types\bin\%DotNetVersionString%
 )
 if "%ControlledValuesBinRoot%"=="" (
-set ControlledValuesBinRoot=C:\WORKSPACE\PROJECTS\GITSPACE\ControlledValues\bin\%DotNetVersionString%
+set ControlledValuesBinRoot=.\..\..\ControlledValues\bin\%DotNetVersionString%
 )
 
 :: Set parameters and solution files
