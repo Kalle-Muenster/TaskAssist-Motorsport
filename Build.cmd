@@ -2,6 +2,7 @@
 @echo on
 if "%DotNetVersionString%"=="core5" set _vers_=50
 if "%DotNetVersionString%"=="dot48" set _vers_=48
+if "%DotNetVersionString%"=="dot60" set _vers_=60
 if "%_vers_%"=="" goto ERROR
 
 :: Prepare locations
@@ -27,7 +28,7 @@ set ControlledValuesBinRoot=.\..\..\ControlledValues\bin\%DotNetVersionString%
 )
 
 :: Set parameters and solution files
-call %_root_%\Args "%~1" "%~2" "%~3" "%~4" TaskAssist%_vers_%.sln
+call %_root_%\Args "%~1" "%~2" "%~3" "%~4" TaskAssist%_vers_%.sln TestAssist%_vers_%.sln
 set _vers_=
 
 :: Do the Build

@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <ApplicationIcon>obstacle.ico</ApplicationIcon>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <BaseOutputPath>..\bin\dot60</BaseOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="obstacle.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Consola">
+      <HintPath>$(ConsolaBinRoot)\$(PlatformTarget)\$(Configuration)\Consola.dll</HintPath>
+      <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Consola.Test">
+      <HintPath>$(ConsolaBinRoot)\$(PlatformTarget)\$(Configuration)\Consola.Test.dll</HintPath>
+      <Private>True</Private>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="ControlledValues">
+      <HintPath>$(ControlledValuesBinRoot)\$(PlatformTarget)\$(Configuration)\ControlledValues.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Int24Types">
+      <HintPath>$(Int24TypesBinRoot)\$(PlatformTarget)\$(Configuration)\Int24Types.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="TaskAssist">
+      <HintPath>$(BaseOutputPath)\$(PlatformTarget)\$(Configuration)\TaskAssist.dll</HintPath>
+      <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+
+</Project>
