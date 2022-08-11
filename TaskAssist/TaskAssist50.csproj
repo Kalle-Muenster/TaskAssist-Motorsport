@@ -70,12 +70,15 @@
   <ItemGroup>
     <Reference Include="Consola">
       <HintPath>$(ConsolaBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\Consola.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="ControlledValues">
       <HintPath>$(ControlledValuesBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\ControlledValues.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Int24Types">
       <HintPath>$(Int24TypesBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\Int24Types.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
 
