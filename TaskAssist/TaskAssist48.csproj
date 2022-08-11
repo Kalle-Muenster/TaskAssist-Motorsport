@@ -140,6 +140,7 @@
     <Compile Include="Motorsport\Drivers.cs" />
     <Compile Include="Motorsport\Motors.cs" />
     <Compile Include="Motorsport\Vehicles.cs" />
+    <Compile Include="Pointers.cs" />
     <Compile Include="Win32Import\Win32ReturnCode.cs" />
     <Compile Include="Win32Import\Win32SystemMetrics.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
