@@ -183,11 +183,11 @@ namespace Stepflow.TaskAssist
                 if( amount > TimeSpan.Zero )
                     Thread.Sleep( amount );
 #else
-                if (activ > 0)
-                    Thread.Sleep( events
-                                ? shortWait - (DateTime.Now - BeginTimeLoop)
-                                : longWait -  (DateTime.Now - BeginTimeLoop)
-                                );
+                if( activ > 0 ) {
+                    TimeSpan sleep = (DateTime.Now - BeginTimeLoop);
+                    sleep = (events ? shortWait : longWait) - sleep;
+                    if( sleep.Ticks > 0 ) Thread.Sleep( sleep );
+                }
 #endif    
             } activ = -1;
             users.Clear();
