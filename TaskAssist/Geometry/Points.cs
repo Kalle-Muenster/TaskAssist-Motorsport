@@ -273,7 +273,7 @@ namespace Stepflow.Gui.Geometry
         public IntPtr pX;
         public IntPtr pY;
 
-        public PointPT(ref Point32 refereto)
+        public PointPT( ref Point32 refereto )
         {
             fixed (short* p = &refereto.x)
             {
@@ -282,7 +282,7 @@ namespace Stepflow.Gui.Geometry
             }
         }
 
-        public PointPT(ref short ixo, ref short ypso)
+        public PointPT( ref short ixo, ref short ypso )
         {
             fixed (short* p = &ixo)
             {
@@ -294,13 +294,13 @@ namespace Stepflow.Gui.Geometry
             }
         }
 
-        public PointPT(IntPtr xptr, IntPtr ypsp)
+        public PointPT( IntPtr xptr, IntPtr ypsp )
         {
             pX = xptr;
             pY = ypsp;
         }
 
-        public static implicit operator Point32(PointPT cast)
+        public static implicit operator Point32( PointPT cast )
         {
             return new Point32(
                 *(short*)cast.pX.ToPointer(),
@@ -319,7 +319,7 @@ namespace Stepflow.Gui.Geometry
             set { *(short*)pY.ToPointer() = (short)value; }
         }
 
-        public void Set(Point32 point)
+        public void Set( Point32 point )
         {
             X = point.x;
             Y = point.y;

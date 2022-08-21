@@ -74,7 +74,7 @@ namespace Stepflow.Gui.Geometry
     public interface IRectangle : IRectangleValues, IRectangleCompounds
     {
         IRectangle converted<RectangleData>() where RectangleData : struct, IRectangle;
-        IRectangle<RType> cast<RType>() where RType : struct, IRectangle;
+        IRectangle<RType,DSize> cast<RType,DSize>() where RType : struct, IRectangle where DSize : struct;
         Rectangle ToRectangle();
         bool Contains( IRectangle other );
         bool Contains( Point64 point );
@@ -99,12 +99,14 @@ namespace Stepflow.Gui.Geometry
 
     /// <summary> IRectangle<> interface for distinct layout specialization via generic parameter </summary>
     /// <typeparam name="RectangleData"></typeparam>
-    public interface IRectangle<RectangleData> : IRectangle where RectangleData : struct, IRectangle
+    public interface IRectangle<RectangleData,DataSizeType> : IRectangle where RectangleData : struct, IRectangle where DataSizeType : struct
     {
-        IRectangle<RectangleData>         casted();
+        IRectangle<RectangleData,DataSizeType> casted();
         RectangleData                     copied();
         RectangleReference<RectangleData> refere();
         RectangleData                     FromRectangle( Rectangle from );
+        void                              SetRawData( DataSizeType data );
+        DataSizeType                      GetRawData();
     }
 
     #endregion
@@ -118,6 +120,7 @@ namespace Stepflow.Gui.Geometry
     {
         public static readonly RectangleData Empty = new RectangleData();
         [FieldOffset(0)] public fixed byte data[8];
+        [FieldOffset(0)] public UInt64  value;
         [FieldOffset(0)] public Point32 compound1;
         [FieldOffset(4)] public Point32 compound2;
     }
@@ -127,7 +130,7 @@ namespace Stepflow.Gui.Geometry
     /// </summary>
     [StructLayout(LayoutKind.Explicit,Size = 8)]
     public unsafe struct CenterAndScale
-        : IRectangle<CenterAndScale> {
+        : IRectangle<CenterAndScale,ulong> {
         public static readonly CenterAndScale Empty = new CenterAndScale();
         [FieldOffset(0)] internal RectangleData Abstract; 
         [FieldOffset(0)] public   Point32 Center;
@@ -159,14 +162,14 @@ namespace Stepflow.Gui.Geometry
             set { Center = (Center - Scale) + (Scale = (value / 2)); }
         }
         
-        public int X { get { return (short)(Center.x - Scale.x); } set { value = (short)((value -= X) / 2); Center.X += value; Scale.X += value; } }
-        public int Y { get { return (short)(Center.y - Scale.y); } set { value = (short)((value -= Y) / 2); Center.Y += value; Scale.Y += value; } }
+        public int X { get { return (short)(Center.x - Scale.x); } set { Center.X = value + Scale.X; } }
+        public int Y { get { return (short)(Center.y - Scale.y); } set { Center.Y = value + Scale.Y; } }
         public int W { get { return (short)(Scale.x + Scale.x); } set { Center.x += (short)((value /= 2)-Scale.x); Scale.X = value; } }
         public int H { get { return (short)(Scale.y + Scale.y); } set { Center.y += (short)((value /= 2)-Scale.y); Scale.Y = value; } }
-        public int L { get { return X; } set { X = value; } }
-        public int T { get { return Y; } set { Y = value; } }
-        public int R { get { return (short)(Center.x + Scale.x); } set { value = (short)((value -= R) / 2); Center.X += value; Scale.X += value; } }
-        public int B { get { return (short)(Center.y + Scale.y); } set { value = (short)((value -= B) / 2); Center.Y += value; Scale.Y += value; } }
+        public int L { get { return X; } set { value = (short)( ( value - X ) / 2 ); Center.X += value; Scale.X += value; } }
+        public int T { get { return Y; } set { value = (short)( ( value - Y ) / 2 ); Center.Y += value; Scale.Y += value; } }
+        public int R { get { return (short)(Center.x + Scale.x); } set { value = (short)((value - R) / 2); Center.X += value; Scale.X += value; } }
+        public int B { get { return (short)(Center.y + Scale.y); } set { value = (short)((value - B) / 2); Center.Y += value; Scale.Y += value; } }
 
         public PointPT CompoundA { get{ return new PointPT(ref Center); } }
         public PointPT CompoundB { get{ return new PointPT(ref Scale); } }
@@ -175,26 +178,26 @@ namespace Stepflow.Gui.Geometry
             get { return StorageLayout.CenterAndScale; }
         }
 
-        public IRectangle<CenterAndScale> casted() {
+        public IRectangle<CenterAndScale,ulong> casted() {
             return this;
         }
-        IRectangle<RType> IRectangle.cast<RType>()
+        IRectangle<RType,DSize> IRectangle.cast<RType,DSize>()
         {
             if( typeof(RType) != typeof(CenterAndScale) )
-                return Rectangle<CenterAndScale>.Convert<RType>( this ).cast<RType>();
+                return Rectangle<CenterAndScale>.Convert<RType>( this ).cast<RType,DSize>();
             else 
-                return casted() as IRectangle<RType>;
+                return casted() as IRectangle<RType,DSize>;
         }
         IRectangle IRectangle.converted<RectangleData>() {
             return Rectangle<CenterAndScale>.Convert<RectangleData>(this);
         }
 
-        RectangleReference<CenterAndScale> IRectangle<CenterAndScale>.refere()
+        RectangleReference<CenterAndScale> IRectangle<CenterAndScale,ulong>.refere()
         {
             return new CenterAndScalePointers( ref this );
         }
 
-        CenterAndScale IRectangle<CenterAndScale>.copied()
+        CenterAndScale IRectangle<CenterAndScale,ulong>.copied()
         {
             CenterAndScale clone = CenterAndScale.Empty;
             clone.Center = Center;
@@ -214,9 +217,19 @@ namespace Stepflow.Gui.Geometry
             return to;
         }
 
-        CenterAndScale IRectangle<CenterAndScale>.FromRectangle( Rectangle from )
+        CenterAndScale IRectangle<CenterAndScale,ulong>.FromRectangle( Rectangle from )
         {
             return CenterAndScale.FromRectangle( from );
+        }
+
+        public void SetRawData( ulong rawdata )
+        {
+            Abstract.value = rawdata;
+        } 
+
+        public ulong GetRawData()
+        {
+            return Abstract.value;
         }
 
         public bool Contains( IRectangle other )
@@ -246,7 +259,7 @@ namespace Stepflow.Gui.Geometry
     /// </summary>
     [StructLayout(LayoutKind.Explicit,Size = 8)]
     public unsafe struct CornerAndSize
-        : IRectangle<CornerAndSize> {
+        : IRectangle<CornerAndSize,ulong> {
         public static readonly CornerAndSize Empty = new CornerAndSize();
         [FieldOffset(0)] internal RectangleData Abstract; 
         [FieldOffset(0)] public Point32 Corner;
@@ -292,25 +305,25 @@ namespace Stepflow.Gui.Geometry
             return Rectangle<CornerAndSize>.Convert<RectangleData>(this);
         }
 
-        CornerAndSize IRectangle<CornerAndSize>.copied() {
+        CornerAndSize IRectangle<CornerAndSize,ulong>.copied() {
             CornerAndSize clone = Empty;
             clone.Abstract = Abstract;
             return clone;
         }
 
-        RectangleReference<CornerAndSize> IRectangle<CornerAndSize>.refere() {
+        RectangleReference<CornerAndSize> IRectangle<CornerAndSize,ulong>.refere() {
             return new CornerAndSizePointers( ref this );
         }
 
-        public IRectangle<CornerAndSize> casted() {
+        public IRectangle<CornerAndSize,ulong> casted() {
             return this;
         }
 
-        IRectangle<RType> IRectangle.cast<RType>() {
+        IRectangle<RType,DSize> IRectangle.cast<RType,DSize>() {
             if( typeof(RType) != typeof(CornerAndSize) )
-                return Rectangle<CornerAndSize>.Convert<RType>(this).cast<RType>();
+                return Rectangle<CornerAndSize>.Convert<RType>(this).cast<RType,DSize>();
             else 
-                return casted() as IRectangle<RType>;
+                return casted() as IRectangle<RType,DSize>;
         }
 
         public Rectangle ToRectangle()
@@ -323,9 +336,19 @@ namespace Stepflow.Gui.Geometry
             return new CornerAndSize( from.X, from.Y, from.Width, from.Height );
         }
 
-        CornerAndSize IRectangle<CornerAndSize>.FromRectangle( Rectangle from )
+        CornerAndSize IRectangle<CornerAndSize,ulong>.FromRectangle( Rectangle from )
         {
             return CornerAndSize.FromRectangle( from );
+        }
+
+        public void SetRawData( ulong rawdata )
+        {
+            Abstract.value = rawdata;
+        }
+
+        public ulong GetRawData()
+        {
+            return Abstract.value;
         }
 
         public bool Contains(IRectangle other)
@@ -355,13 +378,11 @@ namespace Stepflow.Gui.Geometry
     /// </summary>
     [StructLayout(LayoutKind.Explicit,Size = 8)]
     public unsafe struct AbsoluteEdges
-        : IRectangle<AbsoluteEdges> {
+        : IRectangle<AbsoluteEdges,ulong> {
         public static readonly AbsoluteEdges Empty = new AbsoluteEdges();
         [FieldOffset(0)] internal RectangleData Abstract; 
         [FieldOffset(0)] public Point32 Corner;
-        [FieldOffset(0)] public short X;
         [FieldOffset(0)] public short L;
-        [FieldOffset(2)] public short Y;
         [FieldOffset(2)] public short T;
         [FieldOffset(4)] public short R;
         [FieldOffset(6)] public short B;
@@ -377,8 +398,6 @@ namespace Stepflow.Gui.Geometry
 
         int IRectangleValues.L { get { return  L; } set { L = (short)value; } }
         int IRectangleValues.T { get { return  T; } set { T = (short)value; } }
-        int IRectangleValues.X { get { return  X; } set { X = (short)value; } }
-        int IRectangleValues.Y { get { return  Y; } set { Y = (short)value; } }
         int IRectangleValues.R { get { return  R; } set { R = (short)value; } }
         int IRectangleValues.B { get { return  B; } set { B = (short)value; } }
     
@@ -386,9 +405,11 @@ namespace Stepflow.Gui.Geometry
         public Point32 Center { get{ return new Point32((L+R)/2,(T+B)/2); } set{ Point32 m = value - Center; Corner += m; R += m.x; B += m.y; } }
         public Point32 Sizes { get{ return new Point32(W,H); } set{ W = value.x; H = value.y; } } 
         public Point32 Scale { get{ return Center - Corner; } set{ Point32 s = Scale;  value -= s; Corner -= value; R += value.x; B += value.y; } }
-    
-        public int W { get { return (short)(R - L); } set { L = (short)((R = Center.x) - (value/=2)); R += (short)value; } }
-        public int H { get { return (short)(B - T); } set { T = (short)((B = Center.y) - (value/=2)); B += (short)value; } }
+
+        public int X { get { return L; } set { R += (short)(value - L); L = (short)value; } }
+        public int Y { get { return T; } set { B += (short)(value - T); T = (short)value; } }
+        public int W { get { return (short)(R - L); } set { R = (short)(L + value); } } // set { L = (short)((R = Center.x) - (value/=2)); R += (short)value; } }
+        public int H { get { return (short)(B - T); } set { B = (short)(T + value); } } // set { T = (short)((B = Center.y) - (value/=2)); B += (short)value; } }
 
         public PointPT CompoundA { get{ return new PointPT(ref Abstract.compound1); } } 
         public PointPT CompoundB { get{ return new PointPT(ref Abstract.compound2); } }
@@ -402,30 +423,30 @@ namespace Stepflow.Gui.Geometry
             return Rectangle<AbsoluteEdges>.Convert<RectangleData>(this);
         }
 
-        public IRectangle<AbsoluteEdges> casted()
+        public IRectangle<AbsoluteEdges,ulong> casted()
         {
             return this;
         }
 
-        AbsoluteEdges IRectangle<AbsoluteEdges>.copied()
+        AbsoluteEdges IRectangle<AbsoluteEdges,ulong>.copied()
         {
             AbsoluteEdges clone = Empty;
             clone.Abstract = this.Abstract;
             return clone;
         }
 
-        RectangleReference<AbsoluteEdges> IRectangle<AbsoluteEdges>.refere()
+        RectangleReference<AbsoluteEdges> IRectangle<AbsoluteEdges,ulong>.refere()
         {
             return new AbsoluteEdgesPointers( ref this );
         }
 
 
-        IRectangle<RType> IRectangle.cast<RType>()
+        IRectangle<RType,DSize> IRectangle.cast<RType,DSize>()
         {
             if( typeof(RType) != typeof(AbsoluteEdges) )
-                return Rectangle<AbsoluteEdges>.Convert<RType>(this).cast<RType>();
+                return Rectangle<AbsoluteEdges>.Convert<RType>(this).cast<RType,DSize>();
             else 
-                return casted() as IRectangle<RType>;
+                return casted() as IRectangle<RType,DSize>;
         }
 
         public Rectangle ToRectangle()
@@ -442,9 +463,19 @@ namespace Stepflow.Gui.Geometry
             return to;
         }
 
-        AbsoluteEdges IRectangle<AbsoluteEdges>.FromRectangle( Rectangle from )
+        AbsoluteEdges IRectangle<AbsoluteEdges,ulong>.FromRectangle( Rectangle from )
         {
             return AbsoluteEdges.FromRectangle( from );
+        }
+
+        public void SetRawData( ulong rawdata )
+        {
+            Abstract.value = rawdata;
+        }
+
+        public ulong GetRawData()
+        {
+            return Abstract.value;
         }
 
         public bool Contains(IRectangle other)
@@ -470,24 +501,24 @@ namespace Stepflow.Gui.Geometry
 
     [StructLayout(LayoutKind.Explicit,Size = 16)]
     public unsafe struct SystemDefault
-        : IRectangle<SystemDefault>
+        : IRectangle<SystemDefault,Rectangle>
     {
         [FieldOffset(0)]
-        private Rectangle data;
+        internal Rectangle data;
         [FieldOffset(0)]
-        private short x;
+        internal short x;
         [FieldOffset(0)]
         public int X;
         [FieldOffset(4)]
-        private short y;
+        internal short y;
         [FieldOffset(4)]
         public int Y;
         [FieldOffset(8)]
-        private short w;
+        internal short w;
         [FieldOffset(8)]
         public int W;
         [FieldOffset(12)]
-        private short h;
+        internal short h;
         [FieldOffset(12)]
         public int H;
 
@@ -600,15 +631,15 @@ namespace Stepflow.Gui.Geometry
             set { data.Y = value; }
         }
 
-        public IRectangle<RType> cast<RType>() where RType : struct, IRectangle
+        public IRectangle<RType,DSize> cast<RType,DSize>() where RType : struct, IRectangle where DSize : struct
         {
             if( typeof(RType) != typeof(SystemDefault) )
-                return Rectangle<SystemDefault>.Convert<RType>(this).cast<RType>();
+                return Rectangle<SystemDefault>.Convert<RType>(this).cast<RType,DSize>();
             else 
-                return casted() as IRectangle<RType>;
+                return casted() as IRectangle<RType,DSize>;
         }
 
-        public IRectangle<SystemDefault> casted()
+        public IRectangle<SystemDefault,Rectangle> casted()
         {
             return this;
         }
@@ -638,9 +669,19 @@ namespace Stepflow.Gui.Geometry
             return new SystemDefault( from );
         }
 
-        SystemDefault IRectangle<SystemDefault>.FromRectangle( Rectangle from )
+        SystemDefault IRectangle<SystemDefault,Rectangle>.FromRectangle( Rectangle from )
         {
             return SystemDefault.FromRectangle( from );
+        }
+
+        public void SetRawData( Rectangle rawdata )
+        {
+            data = rawdata;
+        }
+
+        public Rectangle GetRawData()
+        {
+            return data;
         }
 
         public bool Intersects( IRectangle other )
@@ -650,7 +691,7 @@ namespace Stepflow.Gui.Geometry
 
         public RectangleReference<SystemDefault> refere()
         {
-            throw new Exception("cannot create reference to SystemDefault rectangle instance");
+            return new SystemRectanglePointers(ref x, ref y, ref w, ref h );
         }
 
         public Rectangle ToRectangle()
@@ -786,12 +827,12 @@ namespace Stepflow.Gui.Geometry
             where RectangleData
                 : struct, IRectangle;
 
-        IRectangle<RType> IRectangle.cast<RType>()
+        IRectangle<RType,DSize> IRectangle.cast<RType,DSize>()
         {
             if ( typeof(RType) != typeof(RactanglePointerType) ) {
-                return Rectangle<RectangleReference<RactanglePointerType>>.Convert<RType>( this ).cast<RType>();
+                return Rectangle<RectangleReference<RactanglePointerType>>.Convert<RType>( this ).cast<RType,DSize>();
             } else {
-                return converted<RType>().cast<RType>();
+                return converted<RType>().cast<RType,DSize>();
             }
         }
 
@@ -1045,6 +1086,53 @@ namespace Stepflow.Gui.Geometry
         }
     }
 
+    public class SystemRectanglePointers : RectangleReference<SystemDefault>
+    {
+
+        public override int X { get { unsafe { return *(int*)pA1.ToPointer(); } } set { unsafe { *(int*)pA1.ToPointer() = value; } } }
+        public override int Y { get { unsafe { return *(int*)pA2.ToPointer(); } } set { unsafe { *(int*)pA2.ToPointer() = value; } } }
+        public override int W { get { unsafe { return *(int*)pB1.ToPointer(); } } set { unsafe { *(int*)pB1.ToPointer() = value; } } }
+        public override int H { get { unsafe { return *(int*)pB2.ToPointer(); } } set { unsafe { *(int*)pB2.ToPointer() = value; } } }
+        public override int L { get { return X; } set { W -= ( value - X ); X = value; } }
+        public override int R { get { return X + W; } set { W = value - X; } }
+        public override int T { get { return Y; } set { H -= ( value - Y ); Y = value; } }
+        public override int B { get { return Y + H; } set { H = value - Y; } }
+        public override Point32 Corner { get { return new Point32(X,Y); } set { X = value.X; Y = value.Y; } }
+        public override Point32 Center { get { return Corner + ( Sizes / 2 ); } set { Corner = value - ( Sizes / 2 ); } }
+        public override Point32 Sizes { get { return new Point32(W,H); } set { W = value.X; H = value.Y; } }
+        public override Point32 Scale { get { return Sizes / 2; } set { Sizes = value * 2; } }
+
+        public override PointPT CompoundA { get { return new PointPT(pA1,pA2); } }
+
+        public override PointPT CompoundB { get { return new PointPT(pB1,pB2); } }
+
+        public override StorageLayout StorageLayout { get { return StorageLayout.CornerAndSizes; } }
+
+        public SystemRectanglePointers()
+            : base() {
+        }
+
+        public SystemRectanglePointers( ref short x, ref short y, ref short w, ref short h )
+            : base(ref x, ref y, ref w, ref h) {
+        }
+
+        public SystemRectanglePointers( ref Point32 position, ref Point32 size )
+            : base( ref position, ref size ) {
+        }
+
+        public SystemRectanglePointers( ref SystemDefault rect )
+            : base( ref rect.x, ref rect.y, ref rect.w, ref rect.h ) {
+        }
+
+        public override IRectangle converted<RectangleData>()
+        {
+            RectangleData d = new RectangleData();
+            d.Corner = Corner;
+            d.Sizes = Sizes;
+            return d;
+        }
+    }
+
     #endregion
 
     #region Static Helper classes
@@ -1106,7 +1194,7 @@ namespace Stepflow.Gui.Geometry
             } return null;
         }
 
-        public static RectangleReference<Layout> Refere<Layout>( ref IRectangle<Layout> rect )
+        public static RectangleReference<Layout> Refere<Layout>( ref IRectangle<Layout,ulong> rect )
             where Layout : struct, IRectangle {
             return rect.refere();
         }
