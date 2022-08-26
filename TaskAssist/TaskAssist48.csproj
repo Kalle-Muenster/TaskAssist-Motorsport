@@ -75,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <ProjectGuid>{ED70C9D5-D5DD-43B0-AE44-F60A4A4D0FE0}</ProjectGuid>
     <PublishUrl>publish\</PublishUrl>
