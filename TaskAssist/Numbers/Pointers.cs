@@ -171,13 +171,11 @@ namespace Stepflow.Numbers.Pointers
             get { unsafe { return *(short*)c.GetPin((int)idx).ToPointer(); } }
             set { unsafe { *(short*)c.GetPin((int)idx).ToPointer() = value; } }
         }
-        public Int24 this[Int24 idx]
-        {
+        public Int24 this[Int24 idx] {
             get { unsafe { return *(Int24*)c.GetPin((int)idx).ToPointer(); } }
             set { unsafe { *(Int24*)c.GetPin((int)idx).ToPointer() = value; } }
         }
-        public UInt24 this[UInt24 idx]
-        {
+        public UInt24 this[UInt24 idx] {
             get { unsafe { return *(UInt24*)c.GetPin((int)(uint)idx).ToPointer(); } }
             set { unsafe { *(UInt24*)c.GetPin((int)(uint)idx).ToPointer() = value; } }
         }
