@@ -117,7 +117,7 @@ namespace Stepflow.TaskAssist
             } if ( startnumber < 0 ) {
                 startnumber = drivers.Count;
                 DriverType tmr = new DriverType();
-                tmr.Init(this);
+                tmr.Init( this );
                 tmr.controls().Speed = persecs;
                 drivers.Add( tmr );
                 int[] extender = new int[drivers.Count];

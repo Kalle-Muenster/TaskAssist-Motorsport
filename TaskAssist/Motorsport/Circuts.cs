@@ -174,6 +174,7 @@ namespace Stepflow.TaskAssist
                 string.Format("functions of type 'Action<{0}>' expected", typeof(A).Name)
             );
         }
+
         public void setAddAndRemove( Action<A> AddFunc, Action<A> RemFunc )
         {
             externAdd = AddFunc;
@@ -233,7 +234,7 @@ namespace Stepflow.TaskAssist
         {
             if( AddFunc.GetType().GetGenericArguments()[0].IsSubclassOf(typeof(ControllerBase)) ) {
                 externAdd = AddFunc; externRem = RemFunc;
-            } else throw new Exception("expected delegate type: 'Action<ControllerBase>'");
+            } else throw new Exception( "expected delegate type: 'Action<ControllerBase>'" );
         }
 
         void IFinishedLap.SetHashSet<A>( HashSet<A> set )

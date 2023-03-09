@@ -6,6 +6,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Stepflow;
@@ -31,14 +32,27 @@ namespace Stepflow.TaskAssist
 
     public delegate void LapFinished(object sender, LapEventArgs e);
     public delegate void RaceOver();
-     
+
+    [Flags]
+    public enum MotorConfiguration
+    {
+        Default = 0,
+        Task = 1,
+        Thread = 2,
+        Detached = 3 
+    }
+
     public abstract class TimedLoop<A,L,T>
         : ActionDriver<A,L,T>
         where A : class
         where L : LapAbstractor, ILapFinish<T>, new()
         where T : class
     {
-        protected Task               drive;
+        private object _drive;
+        private bool    thread;
+        protected T                  getMotor<T>() where T : class {
+            return _drive as T;
+        }
         protected HashSet<A>         users;
         protected volatile int       activ;
         protected long               ticks;
@@ -47,75 +61,122 @@ namespace Stepflow.TaskAssist
         private RaceOver             ended = null;
         public override void OnEnded( RaceOver handler ) { ended = handler; }
         public override bool IsBreak() { return ended != null; }
-        protected void               nextLap( int drivers ) { if (drivers == 0) { ended?.Invoke(); } if( round != null ) round( this, drivers ); }
+        protected void nextLap( int drivers ) { if( drivers == 0 ) { ended?.Invoke(); } if( round != null ) round(this, drivers); }
 
         public event LapFinished     Round {
             add { round += value; }
             remove { round -= value; }
         }
 
-        override public float        Speed {
+        override public float Speed {
             get { return (float)TimeSpan.TicksPerSecond / ticks; }
-            set { ticks = (long)((1.0f/value)*TimeSpan.TicksPerSecond); }
+            set { ticks = (long)( ( 1.0f / value ) * TimeSpan.TicksPerSecond ); }
         }
 
-        virtual protected void       motor() {
+        virtual protected void motor()
+        {
             IEnumerator<A> drvrs = users.GetEnumerator();
             TimeSpan idealline = new TimeSpan(ticks);
             TimeSpan takenline;
             DateTime cycletime;
             int drivers = users.Count;
-            while ( activ > 0 && drivers > 0 ) {
+            while( activ > 0 && drivers > 0 ) {
                 cycletime = DateTime.Now;
-                while (drvrs.MoveNext()) (drvrs.Current as Delegate).DynamicInvoke();
+                while( drvrs.MoveNext() ) ( drvrs.Current as Delegate ).DynamicInvoke();
                 drvrs.Reset();
-                nextLap( drivers = users.Count );
+                nextLap(drivers = users.Count);
                 if( activ > 0 ) {
                     takenline = DateTime.Now - cycletime;
-                    Thread.Sleep( idealline - takenline );
+                    Thread.Sleep(idealline - takenline);
                 }
-            } activ = -1;
+            }
+            activ = -1;
             users.Clear();
-            tackt.SetHashSet( users );
+            tackt.SetHashSet(users);
         }
 
-        public override L            Tackt { 
+        public override L Tackt {
             get { return tackt; }
-            set { if ( !value.UseExternals ) {
-                    tackt.SetHashSet( (users = value.ToHashSet<A>()) );
+            set { if( !value.UseExternals ) {
+                    tackt.SetHashSet(( users = value.ToHashSet<A>() ));
                 }
             }
         }
-    
-        public TimedLoop( bool independantThread ) : base()
+
+        public TimedLoop( MotorConfiguration config ) : base()
         {
             users = new HashSet<A>();
-            drive = new Task(motor, TaskCreationOptions.PreferFairness
-                                  | (independantThread
-                                  ? TaskCreationOptions.LongRunning
-                                  : TaskCreationOptions.AttachedToParent));
-            return;
+            if( thread = config == MotorConfiguration.Thread ) {
+                _drive = new Thread( motor );
+                getMotor<Thread>().SetApartmentState( ApartmentState.STA );
+            } else {
+                _drive = new Task( motor, TaskCreationOptions.PreferFairness | (config == MotorConfiguration.Detached ? TaskCreationOptions.LongRunning : TaskCreationOptions.AttachedToParent ) );
+            } return;
         }
-    
-        public override void Launch()
+
+        protected bool motor_reset()
         {
-            if (drive.IsCompleted || drive.IsFaulted) {
-                drive = new Task( motor, drive.CreationOptions );
-                activ = 0;
-            } else if (activ > 0) return;
-    
-            if( !drive.Status.HasFlag( TaskStatus.Running ) ) {
-                activ = 1;
-                drive.Start();
+            if( thread ) {
+                Thread drive = getMotor<Thread>();
+                if( (int)( drive.ThreadState & ThreadState.Stopped | ThreadState.Aborted ) != 0 ) {
+                    _drive = new Thread( motor );
+                    drive = getMotor<Thread>();
+                    drive.SetApartmentState( ApartmentState.STA );
+                    activ = 0;
+                    return true;
+                } else return false;
+            } else {
+                Task drive = getMotor<Task>();
+                if( drive.IsCompleted || drive.IsFaulted ) {
+                    _drive = new Task( motor, drive.CreationOptions );
+                    activ = 0;
+                    return true;
+                } else return false;
             }
         }
 
-        public override async Task Tribune()
+        protected void motor_start()
+        {
+            if( thread ) {
+                if( getMotor<Thread>().ThreadState != ThreadState.Running ) {
+                    activ = 1;
+                    getMotor<Thread>().Start();
+                }
+            } else {
+                if( !getMotor<Task>().Status.HasFlag( TaskStatus.Running ) ) {
+                    activ = 1;
+                    getMotor<Task>().Start();
+                }
+            }
+        }
+
+        public override void Launch()
+        {
+            if( !motor_reset() ) if( activ > 0 ) return;
+            motor_start();
+        }
+
+        private void awaitloop()
+        {
+            Thread drive = getMotor<Thread>();
+            if ( drive != Thread.CurrentThread )
+            while( drive.ThreadState == ThreadState.Running ) {
+                Thread.Sleep( 10 );
+            }
+        }
+
+        public override Task Tribune()
         {
             --activ;
-            await drive;
+            if( thread ) {
+                Task awaiter = new Task( awaitloop );
+                awaiter.Start();
+                return awaiter;
+            } else {
+                return getMotor<Task>();
+            }
         }
-    
+
         public override void Start( A action )
         {
             if( activ == 0 ) {
@@ -124,15 +185,17 @@ namespace Stepflow.TaskAssist
                 Launch();
             }
         }
+
         public override bool Drive( A action )
         {
             if( activ == 0 )
-                 return users.Contains( action );
+                return users.Contains( action );
             else return tackt.Contains( action );
         }
+
         public override async void Stopt( A action )
         {
-            Task finished = activ > 0 
+            Task finished = activ > 0
                ? Tribune() : null;
             users.Clear();
             tackt.SetHashSet( users );
@@ -194,25 +257,19 @@ namespace Stepflow.TaskAssist
             tackt.SetHashSet( users );
         }
     
-        public BaseIntervalDrive() : this( false ){}
+        public BaseIntervalDrive() : this( MotorConfiguration.Detached ){}
 
-        public BaseIntervalDrive( bool independant ) : base( independant )
+        public BaseIntervalDrive( MotorConfiguration config ) : base( config )
         {
 #if EXTREM_DEBUG
             StdStream.Init();
 #endif
             kuehe = new Queue<A>();
-            tackt.setAddAndRemove<A>( Start, Stopt );
+            tackt.setAddAndRemove<A>(Start, Stopt);
             return;
         }
 
-        public BaseIntervalDrive( float intervalFPS, bool independant ) : this( independant )
-        {
-            Speed = intervalFPS;
-            return;
-        }
-    
-        public BaseIntervalDrive( float intervalFPS ) : this( false )
+        public BaseIntervalDrive( float intervalFPS, MotorConfiguration config ) : this( config )
         {
             Speed = intervalFPS;
             return;
@@ -258,7 +315,7 @@ namespace Stepflow.TaskAssist
         private Hashtable m_mapping;
         private bool      m_oneshot;
     
-        public BarrieredDrive( float interval, bool stopOnBarriersCleared ) : base(interval)
+        public BarrieredDrive( float interval, bool stopOnBarriersCleared, MotorConfiguration config ) : base(interval,config)
         {
             m_oneshot = stopOnBarriersCleared;
             m_mapping = new Hashtable();
@@ -377,18 +434,18 @@ namespace Stepflow.TaskAssist
             users.Clear();
         }
 
-        public ControllerDrive() : base( false )
+        public ControllerDrive() : base( MotorConfiguration.Task )
         {
             waits = new Queue<ControllerBase>(1);
         }
 
-        public ControllerDrive( float intervalFPS ) : base( false )
+        public ControllerDrive( float intervalFPS ) : base( MotorConfiguration.Task )
         {
             Speed = intervalFPS;
             waits = new Queue<ControllerBase>(1);
         }
 
-        public ControllerDrive( float intervalFPS, bool independant ) : base( independant )
+        public ControllerDrive( float intervalFPS, MotorConfiguration config ) : base( config )
         {
             Speed = intervalFPS;
             waits = new Queue<ControllerBase>(1);

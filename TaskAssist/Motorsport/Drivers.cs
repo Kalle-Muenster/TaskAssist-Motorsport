@@ -21,7 +21,11 @@ namespace Stepflow.TaskAssist
         Task Tribune();
     }
 
-    public interface IActionDriver<A,L,T> : IActionDriver where A : class where L : IFinishedLap where T : class
+    public interface IActionDriver<A,L,T>
+        : IActionDriver
+    where A : class 
+    where L : IFinishedLap 
+    where T : class
     {
         ITaskAssistor<A,T> assist();
         L Tackt { get; set; }
@@ -31,7 +35,8 @@ namespace Stepflow.TaskAssist
         void Stopt( A action );
     }
 
-    public class DriveAbstractor : IActionDriver
+    public class DriveAbstractor
+        : IActionDriver
     {
         public virtual void Init( object assistorinstance ) { throw new Exception("must implement"); }
         public virtual float Speed { get; set; }
@@ -81,23 +86,23 @@ namespace Stepflow.TaskAssist
     /// </summary>
     public class SteadyAction : BaseIntervalDrive<Action,LapFinish<Action>,Action>
     {
-        private static bool threadding = true;
-        public static void SetDefaultThradingMode( bool independant ) { threadding = independant; }
+        private static MotorConfiguration default_config = MotorConfiguration.Detached;
+        public static void SetDefaultConfiguration( MotorConfiguration config ) { default_config = config; }
 
-        public SteadyAction() : base( threadding ) {}
-        public SteadyAction( float fps ) : base( fps, threadding ) { }
-        public SteadyAction( bool independant ) : base( independant ) { }
-        public SteadyAction( float fps, bool independant ) : base( fps, independant ) { }
+        public SteadyAction() : base(default_config) {}
+        public SteadyAction( float fps ) : base( fps, default_config ) { }
+        public SteadyAction( MotorConfiguration config ) : base( config ) { }
+        public SteadyAction( float fps, MotorConfiguration config ) : base( fps, config ) { }
     }
 
     public class SteadyEvent : BaseIntervalDrive<EventHandler,LapFinish<EventHandler>,EventHandler>
     {
-        private static bool threadding = true;
-        public static void SetDefaultThradingMode(bool independant) { threadding = independant; }
+        private static MotorConfiguration default_config = MotorConfiguration.Detached;
+        public static void SetDefaultConfiguration( MotorConfiguration config ) { default_config = config; }
 
-        public SteadyEvent() : base( threadding ) { }
-        public SteadyEvent( float triggerRate ) : base( triggerRate, threadding ) { }
-        public SteadyEvent( bool independant ) : base( independant ) { }
-        public SteadyEvent( float triggerRate, bool independant ) : base( triggerRate, independant ) { }
+        public SteadyEvent() : base(default_config) { }
+        public SteadyEvent( float triggerRate ) : base( triggerRate, default_config ) { }
+        public SteadyEvent( MotorConfiguration config ) : base( config ) { }
+        public SteadyEvent( float triggerRate, MotorConfiguration config ) : base( triggerRate, config ) { }
     }
 }
