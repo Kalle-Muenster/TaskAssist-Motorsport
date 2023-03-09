@@ -80,6 +80,10 @@
       <HintPath>$(Int24TypesBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\Int24Types.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Float16Type">
+      <HintPath>$(Float16TypeBinRoot)\$(PlatformTarget)\$(MotorConfiguration)\Float16Type.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Stepflow.Helpers
+namespace Stepflow.Numbers.Pointers
 {
     public class PointerList
     {
@@ -51,6 +51,10 @@ namespace Stepflow.Helpers
         public long this[long idx] {
             get { unsafe { return *(long*)Pointers[(int)idx].ToPointer(); } }
             set { unsafe { *(long*)Pointers[(int)idx].ToPointer() = value; } }
+        }
+        public Float16 this[Float16 idx] {
+            get { unsafe { return *(Float16*)Pointers[(int)idx].ToPointer(); } }
+            set { unsafe { *(Float16*)Pointers[(int)idx].ToPointer() = value; } }
         }
         public float this[float idx] {
             get { unsafe { return *(float*)Pointers[(int)idx].ToPointer(); } }
@@ -121,6 +125,10 @@ namespace Stepflow.Helpers
             get { unsafe { return *(Int64*)Pointer[idx].ToPointer(); } }
             set { unsafe { *(Int64*)Pointer[idx].ToPointer() = value; } }
         }
+        public Float16 this[Float16 idx] {
+            get { unsafe { return *(Float16*)Pointer[(int)idx].ToPointer(); } }
+            set { unsafe { *(Float16*)Pointer[(int)idx].ToPointer() = value; } }
+        }
         public Single this[Single idx] {
             get { unsafe { return *(Single*)Pointer[(int)idx].ToPointer(); } }
             set { unsafe { *(Single*)Pointer[(int)idx].ToPointer() = value; } }
@@ -188,6 +196,10 @@ namespace Stepflow.Helpers
         public long this[long idx] {
             get { unsafe { return *(long*)c.GetPin((int)idx).ToPointer(); } }
             set { unsafe { *(long*)c.GetPin((int)idx).ToPointer() = value; } }
+        }
+        public Float16 this[Float16 idx] {
+            get { unsafe { return *(Float16*)c.GetPin((int)idx).ToPointer(); } }
+            set { unsafe { *(Float16*)c.GetPin((int)idx).ToPointer() = value; } }
         }
         public float this[float idx] {
             get { unsafe { return *(float*)c.GetPin((int)idx).ToPointer(); } }
