@@ -1,4 +1,4 @@
-@echo off
+@if "%ECHO_STATE%"=="" (@echo off ) else (@echo %ECHO_STATE% )
 
 if "%~1"=="dot48" (
 set DotNetVersionNumber=48
@@ -22,16 +22,19 @@ goto END
 if "%DotNetVersionString%"=="core5" (
 set ConsolaProject=%~dp0..\Consola\ConsolaCore5
 set Int24TypesProject=%~dp0..\Int24Types\core5
+set Float16TypeProject=%~dp0..\Float16Type
 set ControllerProject=%~dp0..\ControlledValues\Core5Dll
 ) 
 if "%DotNetVersionString%"=="dot60" (
 set ConsolaProject=%~dp0..\Consola\ConsolaDot60
 set Int24TypesProject=%~dp0..\Int24Types\dot60
+set Float16TypeProject=%~dp0..\Float16Type
 set ControllerProject=%~dp0..\ControlledValues\Core5Dll
 )
 if "%DotNetVersionString%"=="dot48" (
 set ConsolaProject=%~dp0..\Consola\ConsolaDot48
 set Int24TypesProject=%~dp0..\Int24Types\dot48
+set Float16TypeProject=%~dp0..\Float16Type
 set ControllerProject=%~dp0..\ControlledValues\DotnetDll
 )
 
@@ -42,6 +45,11 @@ set CLEAN=%~3
 pushd %ConsolaProject%
 call Build.cmd "%ARCH%" "%CONF%" %CLEAN%
 call Build.cmd "%ARCH%" "%CONF%" Test %CLEAN%
+popd
+
+pushd "%Float16TypeProject%"
+call Pack.bat %DotNetVersionString%
+call Build.cmd "%ARCH%" "%CONF%" %CLEAN%
 popd
 
 pushd "%Int24TypesProject%"

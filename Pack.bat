@@ -5,10 +5,13 @@ if "%DotNetVersionString%"=="core5" set DotNetVersionNumber=50
 set _here_=%CD%
 cd /d %~dp0
 cd TaskAssist
+rd /s /q obj
 dotnet restore TaskAssist%DotNetVersionNumber%.csproj
-cd..
+cd /d %~dp0
+if "%DotNetVersionString%"=="dot60" (
 cd TestAssist
 dotnet restore TestAssist%DotNetVersionNumber%.csproj
+)
 cd /d %_here_%
 set _here_=
 

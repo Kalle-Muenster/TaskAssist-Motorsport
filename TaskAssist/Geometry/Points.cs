@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Drawing;
+using System.Security.Cryptography;
 #if USE_WITH_WPF
 using Point = System.Windows.Point;
 #else
@@ -11,8 +12,119 @@ using Rect = System.Drawing.Rectangle;
 
 namespace Stepflow.Gui.Geometry
 {
+    public interface IPoint 
+    {
+        int X { get; set; }
+        int Y { get; set; }
+    }
+
+    public interface IPointImpl<impl> : IPoint where impl : IPoint
+    {
+        impl fliped();
+        impl flypst();
+        impl flixed();
+        impl flip();
+    }
+
+    public interface IPoint<T,impl> : IPointImpl<impl> where T : struct where impl : IPoint
+    {
+        T x { get; set; }
+        T y { get; set; }
+
+        T Summ();
+        ValueTuple<T,T> tuple();
+        IPoint<T, impl> point();
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct Point32
+    public struct PointF32 : IPoint<Float16,PointF32>
+    {
+        [FieldOffset(0)]
+        private UInt32 raw;
+        [FieldOffset(0)]
+        public Float16 X;
+        [FieldOffset(2)]
+        public Float16 Y;
+
+        Float16 IPoint<Float16,PointF32>.x { get { return X; } set { X = value; } }
+        int IPoint.X { get { return Convert.ToInt32(X); } set { X = (Float16)value; } }
+        Float16 IPoint<Float16,PointF32>.y { get { return Y; } set { Y = value; } }
+        int IPoint.Y { get { return Convert.ToInt32(Y); } set { Y = (Float16)value; } }
+
+        public PointF32( UInt32 fromRawParameter ) : this()
+        {
+            raw = fromRawParameter;
+        }
+        public PointF32( Point fromPoint ) : this()
+        {
+            X = (Float16)fromPoint.X; Y = (Float16)fromPoint.Y;
+        }
+        public PointF32( Float16 ix, Float16 yps ) : this()
+        {
+            X = ix; Y =  yps;
+        }
+        public static implicit operator Point64( PointF32 cast )
+        {
+            return new Point64((int)cast.X,(int)cast.Y);
+        }
+
+        public static implicit operator Size( PointF32 cast )
+        {
+            return new Size((int)cast.X,(int)cast.Y);
+        }
+        public static PointF32 operator +( PointF32 This, PointF32 That )
+        {
+            return new PointF32(This.X + That.X, This.Y + That.Y);
+        }
+        public static PointF32 operator -( PointF32 This, PointF32 That )
+        {
+            return new PointF32(This.X - That.X, This.Y - That.Y);
+        }
+        public static PointF32 operator +( PointF32 This, Point That )
+        {
+            return new PointF32(This.X + That.X, This.Y + That.Y);
+        }
+        public static PointF32 operator -( PointF32 This, Point That )
+        {
+            return new PointF32(This.X - That.Y, This.Y - That.Y);
+        }
+        public static PointF32 operator *( PointF32 This, float scalar )
+        {
+            This.X = (short)( This.X * scalar ); This.Y = (short)( This.Y * scalar ); return This;
+        }
+        public static PointF32 operator /( PointF32 This, short scalar )
+        {
+            This.Y /= scalar; This.X /= scalar; return This;
+        }
+        public static PointF64 operator /( PointF32 This, PointF32 That )
+        {
+            return new PointF64((float)This.X / That.X, (float)This.Y / That.Y);
+        }
+        public IPoint<Float16,PointF32> point() { return this; }
+        public PointF32 fliped() { return new PointF32(Y,X); }
+        public PointF32 flip() { X *= -Float16.One; X += Y; Y -= X; X += Y; return this; }
+        public PointF32 flypst() { return new PointF32(X,-Y); }
+        public PointF32 flixed() { return new PointF32(-X,Y); }
+        public Float16 Summ() { return X + Y; }
+
+        ValueTuple<Float16,Float16> IPoint<Float16,PointF32>.tuple()
+        {
+            return this;
+        }
+
+        public static implicit operator ValueTuple<Float16,Float16>( PointF32 cast )
+        {
+            return ( cast.X, cast.Y );
+        }
+
+        public static implicit operator PointF( PointF32 cast )
+        {
+            return new PointF( (int)cast.X, (int)cast.Y );
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 4)]
+    public struct Point32 : IPoint<short,Point32>
     {
         public static readonly Point32 ZERO = new Point32(0x00000000);
         public static readonly Point32 EMPTY = new Point32(0xFFFFFFFF);
@@ -20,9 +132,12 @@ namespace Stepflow.Gui.Geometry
         [FieldOffset(0)]
         private UInt32 raw;
         [FieldOffset(0)]
-        public Int16 x;
+        public short x;
         [FieldOffset(2)]
-        public Int16 y;
+        public short y;
+
+        short IPoint<short,Point32>.x { get { return x; } set { x = value; } }
+        short IPoint<short,Point32>.y { get { return y; } set { y = value; } }
 
         public int X
         {
@@ -43,6 +158,10 @@ namespace Stepflow.Gui.Geometry
         public Point32(Point fromPoint) : this()
         {
             x = (short)fromPoint.X; y = (short)fromPoint.Y;
+        }
+        public Point32(ValueTuple<short,short> fromTuple) : this()
+        {
+            x = fromTuple.Item1; y = fromTuple.Item2;
         }
         public Point32(int ix, int yps) : this()
         {
@@ -83,44 +202,89 @@ namespace Stepflow.Gui.Geometry
         }
         public static PointF64 operator /(Point32 This, Point32 That)
         {
-            return new PointF64((float)This.x / That.x, (float)This.x / That.x);
+            return new PointF64((float)This.x / That.x, (float)This.y / That.y);
         }
         public Point32 fliped() { return new Point32(y, x); }
-        public Point32 flip() { x *= -1; x += y; y -= x; x += y; return this; }
         public Point32 flypst() { return new Point32(x, -y); }
         public Point32 flixed() { return new Point32(-x, y); }
-        public int Summ() { return x + y; }
-        public static implicit operator Point(Point32 cast)
-        {
-            return new Point(cast.x, cast.y);
+        public Point32 flip() { x *= -1; x += y; y -= x; x += y; return this; }
+        public short   Summ() { return (short)(x + y); }
+
+        public IPoint<short,Point32> point() { return this; }
+        ValueTuple<short,short> IPoint<short,Point32>.tuple() {
+            return this;
+        }
+
+        public static implicit operator Point32( ValueTuple<short,short> cast ) {
+            return new Point32( cast );
+        }
+        public static implicit operator ValueTuple<short,short>( Point32 cast ) {
+            return ( cast.x, cast.y );
+        }
+
+        public static implicit operator Point(Point32 cast) {
+            return new Point( cast.x, cast.y );
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 8)]
-    public struct PointF64
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct PointF64 : IPoint<float,PointF64>
     {
-        float X;
-        float Y;
-        public PointF64(float x, float y) { X = x; Y = y; }
+        [FieldOffset(0)] public ulong raw;
+        [FieldOffset(0)] public float X;
+        [FieldOffset(4)] public float Y;
+        public PointF64(float x, float y) : this() { X = x; Y = y; }
+
+        public float x { get { return X; } set { X = value; } }
+        public float y { get { return Y; } set { Y = value; } }
+
+        int IPoint.X { get { return (int)X; } set { X = value; } }
+        int IPoint.Y { get { return (int)Y; } set { Y = value; } }
+
+        public PointF64 flip() { X *= -1.0f; X += Y; Y -= X; X += Y; return this; }
+        public PointF64 fliped() { return new PointF64(Y,X); }
+        public PointF64 flixed() { return new PointF64(-X,Y); }
+        public PointF64 flypst() { return new PointF64(X,-Y); }
         public float Summ() { return X + Y; }
-        public static implicit operator System.Drawing.PointF(PointF64 cast)
+        public IPoint<float,PointF64> point() { return this; }
+
+        public static implicit operator ValueTuple<float,float>(PointF64 cast)
         {
-            return new System.Drawing.PointF(cast.X, cast.Y);
+            return (cast.X,cast.Y);
+        }
+        ValueTuple<float,float> IPoint<float,PointF64>.tuple()
+        {
+            return this;
+        }
+
+        public static implicit operator PointF64( ValueTuple<float,float> cast )
+        {
+            return new PointF64(cast.Item1,cast.Item2);
+        }
+        public static implicit operator PointF( PointF64 cast ) {
+            return new PointF( cast.X, cast.Y );
         }
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 8)]
-    public struct Point64
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct Point64 : IPoint<int,Point64>
     {
         public static readonly Point64 ZERO = (Point64)Point32.ZERO;
         public static readonly Point64 EMPTY = (Point64)Point32.EMPTY;
-        public int x;
-        public int y;
-        public Point64(int X, int Y)
+        [FieldOffset(0)] public ulong raw;
+        [FieldOffset(0)] public int x;
+        [FieldOffset(4)] public int y;
+        public int X { get { return x; } set { x = value; } }
+        public int Y { get { return y; } set { y = value; } }
+
+        int IPoint<int,Point64>.x { get { return X; } set { X = value; } }
+        int IPoint<int,Point64>.y { get { return Y; } set { Y = value; } }
+
+        public Point64(int X, int Y) : this()
         {
             x = X; y = Y;
         }
-        public Point64(Point point)
+        public Point64(Point point) : this()
         {
             x = point.X; y = point.Y;
         }
@@ -163,6 +327,30 @@ namespace Stepflow.Gui.Geometry
                 "x:{0} y:{1}", x, y
             );
         }
+
+        public Point64 flip() { X *= -1; X += Y; Y -= X; X += Y; return this; }
+        public Point64 fliped() { return new Point64(Y, X); }
+        public Point64 flixed() { return new Point64(-X, Y); }
+        public Point64 flypst() { return new Point64(X, -Y); }
+        public int Summ() { return X + Y; }
+
+        public static implicit operator ValueTuple<int,int>(Point64 cast)
+        {
+            return (cast.x, cast.y);
+        }
+
+        public static implicit operator Point64( ValueTuple<int,int> cast ) 
+        {
+            return new Point64(cast.Item1, cast.Item2);
+        }
+
+        ValueTuple<int,int> IPoint<int,Point64>.tuple()
+        {
+            return this;
+        }
+
+        public IPoint<int,Point64> point() { return this; }
+
         public static implicit operator Point64(Point cast)
         {
             return new Point64(cast);
@@ -268,7 +456,7 @@ namespace Stepflow.Gui.Geometry
     /// A structure which defines a point in 2D space via two 
     /// individual pointer values, each pointing a distant variables.
     /// </summary>
-    public unsafe struct PointPT
+    public unsafe struct PointPT : IPoint<short,Point32>
     {
         public IntPtr pX;
         public IntPtr pY;
@@ -319,11 +507,40 @@ namespace Stepflow.Gui.Geometry
             set { *(short*)pY.ToPointer() = (short)value; }
         }
 
+        public short x {
+            get { return *(short*)pX.ToPointer(); }
+            set { *(short*)pX.ToPointer() = value; }
+        }
+        public short y {
+            get { return *(short*)pY.ToPointer(); }
+            set { *(short*)pY.ToPointer() = value; }
+        }
+
         public void Set( Point32 point )
         {
             X = point.x;
             Y = point.y;
         }
 
+        public Point32 flip() { X *= -1; X += Y; Y -= X; X += Y; return new Point32(X,Y); }
+        public Point32 fliped() { return new Point32(Y, X); }
+        public Point32 flixed() { return new Point32(-X, Y); }
+        public Point32 flypst() { return new Point32(X,-Y); }
+        public short Summ() { return (short)(X + Y); }
+
+        public ValueTuple<short,short> tuple()
+        {
+            return ( x, y );
+        }
+
+        public IPoint<short,Point32> point()
+        {
+            return this;
+        }
+
+        public static implicit operator ValueTuple<short,short>( PointPT cast )
+        {
+            return cast.tuple();
+        }
     }
 }

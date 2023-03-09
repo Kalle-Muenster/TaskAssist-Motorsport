@@ -1,5 +1,5 @@
-:: @if "%ECHO_STATE%"=="" (@echo off ) else (@echo %ECHO_STATE% )
-@echo on
+@if "%ECHO_STATE%"=="" (@echo off ) else (@echo %ECHO_STATE% )
+
 if "%DotNetVersionString%"=="core5" set _vers_=50
 if "%DotNetVersionString%"=="dot48" set _vers_=48
 if "%DotNetVersionString%"=="dot60" set _vers_=60
@@ -22,6 +22,9 @@ set ConsolaBinRoot=.\..\..\Consola\bin\%DotNetVersionString%
 )
 if "%Int24TypesBinRoot%"=="" (
 set Int24TypesBinRoot=.\..\..\Int24Types\bin\%DotNetVersionString%
+)
+if "%Float16TypeBinRoot%"=="" (
+set Float16TypeBinRoot=.\..\..\Float16Type\bin\%DotNetVersionString%
 )
 if "%ControlledValuesBinRoot%"=="" (
 set ControlledValuesBinRoot=.\..\..\ControlledValues\bin\%DotNetVersionString%
