@@ -252,6 +252,10 @@ namespace Stepflow.Gui.Geometry
                 || Contains(other.Center + other.Scale.flixed());
         }
 
+        public static implicit operator ValueTuple<short,short,short,short>( CenterAndScale cast )
+        {
+            return ((short)cast.X,(short)cast.Y,(short)cast.W,(short)cast.H);
+        }
     }
 
     /// <summary>
@@ -371,6 +375,10 @@ namespace Stepflow.Gui.Geometry
                 || Contains(other.Center + other.Scale.flixed());
         }
 
+        public static implicit operator ValueTuple<short,short,short,short>( CornerAndSize cast )
+        {
+            return (cast.Corner.x,cast.Corner.y,cast.Sizes.x, cast.Sizes.y);
+        }
     }
 
     /// <summary>
@@ -496,6 +504,11 @@ namespace Stepflow.Gui.Geometry
                 || Contains(other.Center + other.Scale)
                 || Contains(other.Center + other.Scale.flypst())
                 || Contains(other.Center + other.Scale.flixed());
+        }
+
+        public static implicit operator ValueTuple<short,short,short,short>( AbsoluteEdges cast )
+        {
+            return (cast.L, cast.R,(short)cast.W,(short)cast.H);
         }
     }
 
@@ -698,6 +711,11 @@ namespace Stepflow.Gui.Geometry
         {
             return data;
         }
+
+        public static implicit operator ValueTuple<short,short,short,short>( SystemDefault cast )
+        {
+            return ((short)cast.X, (short)cast.Y, (short)cast.W, (short)cast.H);
+        }
     }
     #endregion
 
@@ -895,6 +913,10 @@ namespace Stepflow.Gui.Geometry
             return clone;
         }
 
+        public static implicit operator ValueTuple<short,short,short,short>( RectangleReference<RactanglePointerType> cast )
+        {
+            return ((short)cast.X,(short)cast.Y,(short)cast.W,(short)cast.H);
+        }
     }
 
     public class CornerAndSizePointers : RectangleReference<CornerAndSize>
@@ -1069,7 +1091,7 @@ namespace Stepflow.Gui.Geometry
         override public int H { get { return (short)(B - T); } set { T = (short)((B = Center.y) - (value/=2)); B += value; } }
 
         override public Point32 Corner { get { return new Point32(X, Y); } set { X = value.x; Y = value.y; } }
-        override public Point32 Center { get{ return new Point32((L+R)/2,(T+B)/2); } set{ Point32 m = value - Center; Corner += m; R += m.x; B += m.y; } }
+        override public Point32 Center { get{ return new Point32( (L+R)/2, (T+B)/2 ); } set{ Point32 m = value - Center; Corner += m; R += m.x; B += m.y; } }
         override public Point32 Sizes { get{ return new Point32(W,H); } set{ W = value.x; H = value.y; } } 
         override public Point32 Scale { get{ return Center - Corner; } set{ Point32 s = Scale;  value -= s; Corner -= value; R += value.x; B += value.y; } }
 
@@ -1256,7 +1278,7 @@ namespace Stepflow.Gui.Geometry
     {
         public const uint LRTB = (uint)StorageLayout.AbsoluteEdges;
         public const uint XYWH = (uint)StorageLayout.CornerAndSizes;
-        public const uint CPSZ = (uint)StorageLayout.CenterAndScale;
+        public const uint CPSC = (uint)StorageLayout.CenterAndScale;
 
         public static IRectangle Convert<Layout>( rType from )
             where Layout : struct, IRectangleValues, IRectangleCompounds
@@ -1337,6 +1359,47 @@ namespace Stepflow.Gui.Geometry
         public static IRectangle Create( Point32 p1, Point32 p2 )
         {
             return Create<rType>( p1.x, p1.y, p2.x, p2.y );
+        }
+
+        public static IRectangle Create( StorageLayout descriptor, ulong from4ShortsRawData )
+        {
+            unsafe { switch( descriptor ) {
+                case StorageLayout.CenterAndScale: return *(CenterAndScale*)&from4ShortsRawData;
+                case StorageLayout.CornerAndSizes: return *(CornerAndSize*)&from4ShortsRawData;
+                case StorageLayout.AbsoluteEdges: return *(AbsoluteEdges*)&from4ShortsRawData;
+                default: {
+                     IRectangle r = *(CornerAndSize*)&from4ShortsRawData;
+                   return r.converted<SystemDefault>();
+                }
+            } }
+        }
+
+        public static IRectangle Create( StorageLayout parameterDescriptor, ValueTuple<short,short,short,short> parameterContainer )
+        {
+            IRectangle create = Rectangle<rType>.Create();
+            switch( parameterDescriptor ) {
+                case StorageLayout.CenterAndScale: {
+                        create.Center = new Point32(parameterContainer.Item1,parameterContainer.Item2);
+                        create.Scale = new Point32( parameterContainer.Item3,parameterContainer.Item4);
+                        return create;
+                    }
+                case StorageLayout.SystemDefault:
+                case StorageLayout.CornerAndSizes: {
+                        create.Center = new Point32( parameterContainer.Item1 + parameterContainer.Item3 / 2
+                                                   , parameterContainer.Item2 + parameterContainer.Item4 / 2 );
+                        create.Scale = new Point32( parameterContainer.Item3 / 2, parameterContainer.Item4 / 2 );
+                        return create;
+                    }
+                case StorageLayout.AbsoluteEdges: {
+                        create.L = parameterContainer.Item1;
+                        create.R = parameterContainer.Item2;
+                        create.T = parameterContainer.Item3;
+                        create.B = parameterContainer.Item4;
+                        return create;
+                    }
+                default:
+                return create;
+            }
         }
 
         public static IRectangle Create( StorageLayout fromParameters, int val1, int val2, int val3, int val4 )
